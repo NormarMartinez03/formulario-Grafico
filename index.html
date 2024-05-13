@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario de Gráficos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link title="styles" href="styles.css">
+</head>
+<body>
+  <h1>Formulario de Gráficos</h1>
+  <form id="graphForm">
+    <label for="graphType">Seleccionar tipo de gráfico:</label>
+    <select id="graphType" name="graphType">
+      <option value="bar">Gráfico de Barras</option>
+      <option value="line">Gráfico de Líneas</option>
+      <option value="pie">Gráfico Circular</option>
+    </select>
+    <br><br>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Etiqueta</th>
+          <th>Conjunto de Datos 1</th>
+          <th>Conjunto de Datos 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" name="label[]"></td>
+          <td><input type="number" name="value1[]"></td>
+          <td><input type="number" name="value2[]"></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" id="addRow">Añadir Fila</button>
+    <button type="submit">Generar Gráfico</button>
+  </form>
+  <canvas id="graphCanvas"></canvas>
+
+  <script>
+    const graphForm = document.getElementById('graphForm');
+    const graphCanvas = document.getElementById('graphCanvas');
+    const addRowButton = document.getElementById('addRow');
+    let myChart = null;
+
+    addRowButton.addEventListener('click', () => {
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = `
+        <td><input type="text" name="label[]"></td>
+        <td><input type="number" name="value1[]"></td>
+        <td><input type="number" name="value2[]"></td>
+      `;
+      document.getElementById('dataTable').tbody.appendChild(newRow);
+    });
+
+    graphForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const graphType = document.getElementById('graphType').value;
+      const data = getDataFromTable();
+
+      if (!isValidData(data)) {
+        alert('Datos inválidos. Por favor, revise su entrada.');
+        return;
+      }
+
+      renderGraph(graphType, data);
+    });
+
+    function getDataFromTable() {
+      const tableData = {
+        labels: [],
+        datasets: [
+          { label: 'Conjunto de Datos 1', data: [] },
+          { label: 'Conjunto de Datos 2', data: [] },
+        ],
+      };
+
+      const rows = document.getElementById('dataTable').rows;
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        tableData.labels.push(row.cells[0].children[0].value);
+        tableData.datasets[0].data.push(parseFloat(row.cells[1].children[0].value));
+        tableData.datasets[1].data.push(parseFloat(row.cells[2].children[0].value));
+      }
+      return tableData;
+    }
+
+    function isValidData(data) {
+      for (let i = 0; i < data.labels.length; i++) {
+        if (!data.labels[i] || isNaN(data.datasets[0].data[i]) || isNaN(data.datasets[1].data[i])) {
+          alert(`Datos inválidos en la fila ${i + 1}. Por favor, rellene todos los campos con valores válidos.`);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    addRowButton.addEventListener('click', () => {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="text" name="label[]"></td>
+          <td><input type="number" name="value1[]"></td>
+          <td><input type="number" name="value2[]"></td>
+        `;
+        document.getElementById('dataTable').tBodies[0].appendChild(newRow);
+      });
+
+    function renderGraph(graphType, data) {
+      const ctx = graphCanvas.getContext('2d');
+
+      if (myChart) {
+        myChart.config.type = graphType;
+        myChart.data = data;
+        myChart.update();
+      } else {
+        myChart = new Chart(ctx, {
+          type: graphType,
+          data: data,
+          options: {}
+        });
+      }
+    }
+  </script>
+</body>
+</html>
